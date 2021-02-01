@@ -3,6 +3,18 @@ FROM ibmcom/tensorflow-ppc64le:devel-manylinux2014
 
 #Copied from https://gitlab.com/nvidia/container-images/cuda-ppc64le/blob/centos7/10.1/base/Dockerfile
 
+RUN rm -rf /usr/local/bin/bazel
+ARG BAZEL_VERSION=3.1.0
+WORKDIR /
+RUN mkdir /bazel && \
+    cd /bazel && \
+    curl -fSsL -O https://github.com/bazelbuild/bazel/releases/download/$BAZEL_VERSION/bazel-$BAZEL_VERSION-dist.zip && \
+    unzip bazel-$BAZEL_VERSION-dist.zip && \
+    BAZEL_LINKLIBS=-l%:libstdc++.a EXTRA_BAZEL_ARGS="--host_javabase=@local_jdk//:jdk" bash ./compile.sh && \
+    cp output/bazel /usr/local/bin/ && \
+    cd / && \
+    rm -rf /bazel
+
 RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
     echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c --strict -
